@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package argus.hermes.v1;
+
+option go_package = "github.com/argus/ecs-fargate-agent/internal/hermespb;hermespb";
+
+import "google/protobuf/timestamp.proto";
+
+enum LaunchType {
+  LAUNCH_TYPE_UNSPECIFIED = 0;
+  LAUNCH_TYPE_EC2 = 1;
+  LAUNCH_TYPE_FARGATE = 2;
+}
+
+message ContainerSample {
+  string container_name = 1;
+  double cpu_percent = 2;
+  uint64 mem_usage_bytes = 3;
+  uint64 mem_limit_bytes = 4;
+  double mem_percent = 5;
+  uint64 net_rx_bytes = 6;
+  uint64 net_tx_bytes = 7;
+  uint64 blk_read_bytes = 8;
+  uint64 blk_write_bytes = 9;
+  int32 restart_count = 10;
+  google.protobuf.Timestamp timestamp = 11;
+}
+
+message LogLine {
+  string container_name = 1;
+  string stream = 2;
+  string message = 3;
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+message Batch {
+  string agent_id = 1;
+  string cluster = 2;
+  string service = 3;
+  string task_arn = 4;
+  LaunchType launch_type = 5;
+  repeated ContainerSample samples = 6;
+  repeated LogLine logs = 7;
+  google.protobuf.Timestamp sent_at = 8;
+}
+
+message PushAck {
+  bool accepted = 1;
+  uint32 samples_received = 2;
+  uint32 logs_received = 3;
+}
+
+message StreamSummary {
+  uint32 batches = 1;
+  uint32 samples = 2;
+  uint32 logs = 3;
+}
+
+service Ingest {
+  rpc PushBatch(Batch) returns (PushAck);
+  rpc StreamBatches(stream Batch) returns (StreamSummary);
+}
+

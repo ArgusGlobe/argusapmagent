@@ -1,0 +1,32 @@
+{
+  "app-container-id": {
+    "read": "2026-07-02T10:00:30Z",
+    "preread": "2026-07-02T10:00:00Z",
+    "cpu_stats": {
+      "cpu_usage": { "total_usage": 140000000 },
+      "system_cpu_usage": 1000000000,
+      "online_cpus": 2
+    },
+    "precpu_stats": {
+      "cpu_usage": { "total_usage": 100000000 },
+      "system_cpu_usage": 900000000,
+      "online_cpus": 2
+    },
+    "memory_stats": { "usage": 188743680, "limit": 1073741824 },
+    "networks": {
+      "eth0": {
+        "rx_bytes": 10240,
+        "tx_bytes": 20480,
+        "rx_packets": 120,
+        "tx_packets": 130
+      }
+    },
+    "blkio_stats": {
+      "io_service_bytes_recursive": [
+        { "op": "Read", "value": 2048 },
+        { "op": "Write", "value": 4096 }
+      ]
+    }
+  }
+}
+

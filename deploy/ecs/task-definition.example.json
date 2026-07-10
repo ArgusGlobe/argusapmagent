@@ -1,0 +1,56 @@
+{
+  "family": "argus-fargate-app-with-sidecar",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::<account-id>:role/appTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "application",
+      "image": "<account-id>.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest",
+      "essential": true,
+      "cpu": 384,
+      "memory": 768,
+      "portMappings": [{ "containerPort": 8080, "protocol": "tcp" }],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-app",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "app"
+        }
+      }
+    },
+    {
+      "name": "argus-sidecar",
+      "image": "<account-id>.dkr.ecr.ap-south-1.amazonaws.com/argus-ecs-fargate-agent:latest",
+      "essential": false,
+      "cpu": 128,
+      "memory": 256,
+      "environment": [
+        { "name": "ARGUS_HERMES_HOST", "value": "hermes.internal" },
+        { "name": "ARGUS_HERMES_GRPC_PORT", "value": "19090" },
+        { "name": "ARGUS_ENVIRONMENT", "value": "prod" },
+        { "name": "ARGUS_SERVICE_NAME", "value": "my-app" },
+        { "name": "ARGUS_COLLECTION_INTERVAL_SECONDS", "value": "30" }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      }
+    }
+  ]
+}
+

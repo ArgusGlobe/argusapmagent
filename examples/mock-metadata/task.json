@@ -1,0 +1,22 @@
+{
+  "Cluster": "arn:aws:ecs:ap-south-1:123456789012:cluster/local-dev-cluster",
+  "TaskARN": "arn:aws:ecs:ap-south-1:123456789012:task/local-dev-cluster/local-task-id",
+  "Family": "screenfacts-api-service",
+  "Revision": "1",
+  "DesiredStatus": "RUNNING",
+  "KnownStatus": "RUNNING",
+  "LaunchType": "FARGATE",
+  "AvailabilityZone": "ap-south-1a",
+  "Limits": { "CPU": 0.5, "Memory": 1024 },
+  "Containers": [
+    {
+      "DockerId": "app-container-id",
+      "Name": "screenfacts-api",
+      "Image": "screenfacts-api:latest",
+      "DesiredStatus": "RUNNING",
+      "KnownStatus": "RUNNING",
+      "Limits": { "CPU": 0.5, "Memory": 1024 }
+    }
+  ]
+}
+
