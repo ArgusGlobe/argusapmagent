@@ -65,7 +65,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = healthServer.Stop(shutdownCtx)
-	logger.Info("argus ecs fargate agent stopped")
+	logger.Info("probe ecs fargate agent stopped")
 }
 
 func run(
@@ -76,7 +76,7 @@ func run(
 	shipper *grpcclient.Client,
 	logger *slog.Logger,
 ) error {
-	logger.Info("argus ecs fargate agent started",
+	logger.Info("probe ecs fargate agent started",
 		"environment", cfg.Environment,
 		"service", cfg.ServiceName,
 		"interval", cfg.CollectionInterval,

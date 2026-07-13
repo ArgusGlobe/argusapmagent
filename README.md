@@ -1,8 +1,8 @@
-# Argus ECS Fargate Sidecar Agent
+# Probe ECS Fargate Sidecar Agent
 
 Go sidecar agent for ECS Fargate tasks. It runs beside the application container,
 discovers task/container identity from the ECS Task Metadata Endpoint v4, collects
-container resource telemetry, and streams batches to Argus Hermes over gRPC.
+container resource telemetry, and streams batches to Hermes over gRPC.
 
 ## Design
 
@@ -20,11 +20,11 @@ Only these variables are used:
 
 | Variable | Purpose |
 | --- | --- |
-| `ARGUS_HERMES_HOST` | Hermes gRPC host. Defaults to `127.0.0.1`. |
-| `ARGUS_HERMES_GRPC_PORT` | Hermes gRPC port. Defaults to `19090`. |
-| `ARGUS_ENVIRONMENT` | Environment label such as `prod`, `uat`, `dev`. |
-| `ARGUS_SERVICE_NAME` | Human service name shown in Argus. |
-| `ARGUS_COLLECTION_INTERVAL_SECONDS` | Collection interval. Minimum 5s, default 30s. |
+| `HERMES_HOST` | Hermes gRPC host. Defaults to `127.0.0.1`. |
+| `HERMES_GRPC_PORT` | Hermes gRPC port. Defaults to `19090`. |
+| `PROBE_ENVIRONMENT` | Environment label such as `prod`, `uat`, `dev`. |
+| `PROBE_SERVICE_NAME` | Human service name shown for the probe. |
+| `PROBE_COLLECTION_INTERVAL_SECONDS` | Collection interval. Minimum 5s, default 30s. |
 | `ECS_CONTAINER_METADATA_URI_V4` | Injected automatically by ECS Fargate. |
 
 ## Local Development
@@ -46,18 +46,18 @@ go test ./...
 ## Docker
 
 ```bash
-docker build -t argus-ecs-fargate-agent:latest .
+docker build -t probe-ecs-fargate-agent:latest .
 ```
 
 ## ECS Deployment
 
 Use `deploy/ecs/task-definition.example.json` as the pattern. Add the
-`argus-sidecar` container to every Fargate task definition. ECS automatically
+`probe-sidecar` container to every Fargate task definition. ECS automatically
 injects `ECS_CONTAINER_METADATA_URI_V4`.
 
 ## Hermes Compatibility
 
-The agent uses the existing Argus Hermes `argus.hermes.v1.Ingest` gRPC service
+The agent uses the existing Hermes `argus.hermes.v1.Ingest` gRPC service
 and sends:
 
 - `agent_id`
@@ -83,7 +83,7 @@ logs. Production log shipping should be added in one of these ways:
 1. Application writes structured logs to a shared volume mounted into the
    sidecar.
 2. Application sends OTLP logs to the sidecar.
-3. FireLens routes logs to an Argus-compatible endpoint.
+3. FireLens routes logs to a Hermes-compatible endpoint.
 
 This is not the CloudWatch Metrics API. FireLens is part of ECS logging
 plumbing; destination cost depends on where logs are sent.
@@ -93,5 +93,4 @@ plumbing; destination cost depends on where logs are sent.
 This agent follows OpenTelemetry-style semantic labels and keeps metrics/logs in
 an extensible internal model. Next step is to add an OTLP receiver/exporter path
 so application metrics/logs/traces can flow through the sidecar without changing
-the Argus gRPC shipper.
-
+the Hermes gRPC shipper.

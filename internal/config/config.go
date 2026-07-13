@@ -13,6 +13,13 @@ const (
 	defaultEnv        = "local"
 	defaultService    = "unknown-service"
 	defaultInterval   = 30 * time.Second
+
+	envHermesHost        = "HERMES_HOST"
+	envHermesGRPCPort    = "HERMES_GRPC_PORT"
+	envProbeEnvironment  = "PROBE_ENVIRONMENT"
+	envProbeServiceName  = "PROBE_SERVICE_NAME"
+	envProbeIntervalSecs = "PROBE_COLLECTION_INTERVAL_SECONDS"
+	envECSMetadataURIV4  = "ECS_CONTAINER_METADATA_URI_V4"
 )
 
 type Config struct {
@@ -26,12 +33,12 @@ type Config struct {
 
 func Load() Config {
 	return Config{
-		HermesHost:         env("ARGUS_HERMES_HOST", defaultHermesHost),
-		HermesGRPCPort:     env("ARGUS_HERMES_GRPC_PORT", defaultHermesPort),
-		Environment:        env("ARGUS_ENVIRONMENT", defaultEnv),
-		ServiceName:        env("ARGUS_SERVICE_NAME", defaultService),
-		CollectionInterval: interval(env("ARGUS_COLLECTION_INTERVAL_SECONDS", "")),
-		MetadataURI:        os.Getenv("ECS_CONTAINER_METADATA_URI_V4"),
+		HermesHost:         env(envHermesHost, defaultHermesHost),
+		HermesGRPCPort:     env(envHermesGRPCPort, defaultHermesPort),
+		Environment:        env(envProbeEnvironment, defaultEnv),
+		ServiceName:        env(envProbeServiceName, defaultService),
+		CollectionInterval: interval(env(envProbeIntervalSecs, "")),
+		MetadataURI:        os.Getenv(envECSMetadataURIV4),
 	}
 }
 

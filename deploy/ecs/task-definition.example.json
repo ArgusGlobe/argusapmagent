@@ -1,5 +1,5 @@
 {
-  "family": "argus-fargate-app-with-sidecar",
+  "family": "probe-fargate-app-with-sidecar",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
@@ -31,17 +31,17 @@
       }
     },
     {
-      "name": "argus-sidecar",
-      "image": "<account-id>.dkr.ecr.ap-south-1.amazonaws.com/argus-ecs-fargate-agent:latest",
+      "name": "probe-sidecar",
+      "image": "<account-id>.dkr.ecr.ap-south-1.amazonaws.com/probe-ecs-fargate-agent:latest",
       "essential": false,
       "cpu": 128,
       "memory": 256,
       "environment": [
-        { "name": "ARGUS_HERMES_HOST", "value": "hermes.internal" },
-        { "name": "ARGUS_HERMES_GRPC_PORT", "value": "19090" },
-        { "name": "ARGUS_ENVIRONMENT", "value": "prod" },
-        { "name": "ARGUS_SERVICE_NAME", "value": "my-app" },
-        { "name": "ARGUS_COLLECTION_INTERVAL_SECONDS", "value": "30" }
+        { "name": "HERMES_HOST", "value": "hermes.internal" },
+        { "name": "HERMES_GRPC_PORT", "value": "19090" },
+        { "name": "PROBE_ENVIRONMENT", "value": "prod" },
+        { "name": "PROBE_SERVICE_NAME", "value": "my-app" },
+        { "name": "PROBE_COLLECTION_INTERVAL_SECONDS", "value": "30" }
       ],
       "healthCheck": {
         "command": ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"],
@@ -53,4 +53,3 @@
     }
   ]
 }
-

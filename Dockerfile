@@ -35,7 +35,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build \
       -trimpath \
       -ldflags="-s -w" \
-      -o /out/argus-ecs-agent \
+      -o /out/probe-ecs-agent \
       ./cmd/agent
 
 # This final stage is built for TARGETPLATFORM, such as linux/amd64.
@@ -46,7 +46,7 @@ WORKDIR /
 COPY --from=build /etc/ssl/certs/ca-certificates.crt \
     /etc/ssl/certs/ca-certificates.crt
 
-COPY --from=build /out/argus-ecs-agent /argus-ecs-agent
+COPY --from=build /out/probe-ecs-agent /probe-ecs-agent
 
 EXPOSE 8080
 
@@ -56,8 +56,8 @@ HEALTHCHECK --interval=30s \
     --timeout=3s \
     --start-period=10s \
     --retries=3 \
-    CMD ["/argus-ecs-agent", "healthcheck"]
+    CMD ["/probe-ecs-agent", "healthcheck"]
 
 USER nonroot:nonroot
 
-ENTRYPOINT ["/argus-ecs-agent"]
+ENTRYPOINT ["/probe-ecs-agent"]
