@@ -25,6 +25,7 @@ Only these variables are used:
 | `PROBE_ENVIRONMENT` | Environment label such as `prod`, `uat`, `dev`. |
 | `PROBE_SERVICE_NAME` | Human service name shown for the probe. |
 | `PROBE_COLLECTION_INTERVAL_SECONDS` | Collection interval. Minimum 5s, default 30s. |
+| `PROBE_HEALTH_PORT` | Probe health endpoint port. Defaults to `8080`. |
 | `ECS_CONTAINER_METADATA_URI_V4` | Injected automatically by ECS Fargate. |
 
 ## Local Development

@@ -20,15 +20,16 @@ import (
 )
 
 func main() {
+	cfg := config.Load()
+
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
-		if err := health.Check("http://127.0.0.1:8080/healthz"); err != nil {
+		if err := health.Check(cfg.HealthURL()); err != nil {
 			os.Exit(1)
 		}
 		return
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	cfg := config.Load()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -50,7 +51,7 @@ func main() {
 	coll := collector.New(metaClient, task, cfg, logger)
 	shipper := grpcclient.New(cfg, logger)
 
-	healthServer := health.NewServer(":8080", logger)
+	healthServer := health.NewServer(cfg.HealthAddress(), logger)
 	go func() {
 		if err := healthServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("health server failed", "error", err)

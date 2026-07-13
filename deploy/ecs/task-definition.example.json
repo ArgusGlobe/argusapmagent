@@ -41,10 +41,11 @@
         { "name": "HERMES_GRPC_PORT", "value": "19090" },
         { "name": "PROBE_ENVIRONMENT", "value": "prod" },
         { "name": "PROBE_SERVICE_NAME", "value": "my-app" },
-        { "name": "PROBE_COLLECTION_INTERVAL_SECONDS", "value": "30" }
+        { "name": "PROBE_COLLECTION_INTERVAL_SECONDS", "value": "30" },
+        { "name": "PROBE_HEALTH_PORT", "value": "8080" }
       ],
       "healthCheck": {
-        "command": ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"],
+        "command": ["CMD", "/probe-ecs-agent", "healthcheck"],
         "interval": 30,
         "timeout": 5,
         "retries": 3,

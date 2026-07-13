@@ -10,6 +10,7 @@ import (
 const (
 	defaultHermesHost = "127.0.0.1"
 	defaultHermesPort = "19090"
+	defaultHealthPort = "8080"
 	defaultEnv        = "local"
 	defaultService    = "unknown-service"
 	defaultInterval   = 30 * time.Second
@@ -19,6 +20,7 @@ const (
 	envProbeEnvironment  = "PROBE_ENVIRONMENT"
 	envProbeServiceName  = "PROBE_SERVICE_NAME"
 	envProbeIntervalSecs = "PROBE_COLLECTION_INTERVAL_SECONDS"
+	envProbeHealthPort   = "PROBE_HEALTH_PORT"
 	envECSMetadataURIV4  = "ECS_CONTAINER_METADATA_URI_V4"
 )
 
@@ -28,6 +30,7 @@ type Config struct {
 	Environment        string
 	ServiceName        string
 	CollectionInterval time.Duration
+	HealthPort         string
 	MetadataURI        string
 }
 
@@ -38,12 +41,21 @@ func Load() Config {
 		Environment:        env(envProbeEnvironment, defaultEnv),
 		ServiceName:        env(envProbeServiceName, defaultService),
 		CollectionInterval: interval(env(envProbeIntervalSecs, "")),
+		HealthPort:         port(env(envProbeHealthPort, defaultHealthPort)),
 		MetadataURI:        os.Getenv(envECSMetadataURIV4),
 	}
 }
 
 func (c Config) HermesAddress() string {
 	return net.JoinHostPort(c.HermesHost, c.HermesGRPCPort)
+}
+
+func (c Config) HealthAddress() string {
+	return net.JoinHostPort("", c.HealthPort)
+}
+
+func (c Config) HealthURL() string {
+	return "http://" + net.JoinHostPort("127.0.0.1", c.HealthPort) + "/healthz"
 }
 
 func env(key, fallback string) string {
@@ -62,4 +74,12 @@ func interval(raw string) time.Duration {
 		return defaultInterval
 	}
 	return time.Duration(secs) * time.Second
+}
+
+func port(raw string) string {
+	value, err := strconv.Atoi(raw)
+	if err != nil || value < 1 || value > 65535 {
+		return defaultHealthPort
+	}
+	return raw
 }
