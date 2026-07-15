@@ -3,8 +3,11 @@ package telemetry
 import "time"
 
 type Snapshot struct {
-	Samples []ContainerSample
-	Logs    []LogLine
+	Samples    []ContainerSample
+	Logs       []LogLine
+	AppMetrics []AppMetricSample
+	Network    []NetworkCallSample
+	LogRollups []LogAggregate
 }
 
 type ContainerSample struct {
@@ -37,4 +40,41 @@ type LogLine struct {
 	TraceID       string
 	SpanID        string
 	Labels        map[string]string
+}
+
+type AppMetricSample struct {
+	Timestamp     time.Time
+	ContainerName string
+	Namespace     string
+	Name          string
+	Value         float64
+	Unit          string
+	Labels        map[string]string
+}
+
+type NetworkCallSample struct {
+	Timestamp     time.Time
+	ContainerName string
+	Direction     string
+	Protocol      string
+	Method        string
+	Peer          string
+	Host          string
+	Path          string
+	StatusCode    int
+	DurationMS    float64
+	BytesIn       uint64
+	BytesOut      uint64
+	Error         string
+}
+
+type LogAggregate struct {
+	ContainerName string
+	Stream        string
+	Level         string
+	Fingerprint   string
+	Count         uint64
+	SampleMessage string
+	FirstSeen     time.Time
+	LastSeen      time.Time
 }

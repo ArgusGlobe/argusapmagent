@@ -13,6 +13,7 @@ const (
 	defaultHealthPort = "8080"
 	defaultEnv        = "local"
 	defaultService    = "unknown-service"
+	defaultOTLPAddr   = "127.0.0.1:4317"
 	defaultInterval   = 30 * time.Second
 
 	envHermesHost        = "HERMES_HOST"
@@ -21,6 +22,8 @@ const (
 	envProbeServiceName  = "PROBE_SERVICE_NAME"
 	envProbeIntervalSecs = "PROBE_COLLECTION_INTERVAL_SECONDS"
 	envProbeHealthPort   = "PROBE_HEALTH_PORT"
+	envProbeOTLPEnabled  = "PROBE_OTLP_ENABLED"
+	envProbeOTLPGRPCAddr = "PROBE_OTLP_GRPC_ADDR"
 	envECSMetadataURIV4  = "ECS_CONTAINER_METADATA_URI_V4"
 )
 
@@ -31,6 +34,8 @@ type Config struct {
 	ServiceName        string
 	CollectionInterval time.Duration
 	HealthPort         string
+	OTLPEnabled        bool
+	OTLPGRPCAddr       string
 	MetadataURI        string
 }
 
@@ -42,6 +47,8 @@ func Load() Config {
 		ServiceName:        env(envProbeServiceName, defaultService),
 		CollectionInterval: interval(env(envProbeIntervalSecs, "")),
 		HealthPort:         port(env(envProbeHealthPort, defaultHealthPort)),
+		OTLPEnabled:        boolEnv(env(envProbeOTLPEnabled, "true")),
+		OTLPGRPCAddr:       addr(env(envProbeOTLPGRPCAddr, defaultOTLPAddr)),
 		MetadataURI:        os.Getenv(envECSMetadataURIV4),
 	}
 }
@@ -82,4 +89,27 @@ func port(raw string) string {
 		return defaultHealthPort
 	}
 	return raw
+}
+
+func addr(raw string) string {
+	if raw == "" {
+		return defaultOTLPAddr
+	}
+	host, port, err := net.SplitHostPort(raw)
+	if err != nil || host == "" || port == "" {
+		return defaultOTLPAddr
+	}
+	if _, err := strconv.Atoi(port); err != nil {
+		return defaultOTLPAddr
+	}
+	return raw
+}
+
+func boolEnv(raw string) bool {
+	switch raw {
+	case "0", "false", "FALSE", "False", "no", "NO", "No":
+		return false
+	default:
+		return true
+	}
 }

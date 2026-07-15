@@ -51,7 +51,62 @@ func (b *Batcher) FromSnapshot(s Snapshot) *pb.Batch {
 			Stream:        line.Stream,
 			Message:       line.Message,
 			Timestamp:     timestamppb.New(line.Timestamp),
+			Severity:      line.Severity,
+			TraceId:       line.TraceID,
+			SpanId:        line.SpanID,
+			Labels:        labelsToProto(line.Labels),
 		})
+	}
+	for _, metric := range s.AppMetrics {
+		out.AppMetrics = append(out.AppMetrics, &pb.AppMetric{
+			ContainerName: metric.ContainerName,
+			Namespace:     metric.Namespace,
+			Name:          metric.Name,
+			Value:         metric.Value,
+			Unit:          metric.Unit,
+			Labels:        labelsToProto(metric.Labels),
+			Timestamp:     timestamppb.New(metric.Timestamp),
+		})
+	}
+	for _, call := range s.Network {
+		out.Network = append(out.Network, &pb.NetworkCall{
+			ContainerName: call.ContainerName,
+			Direction:     call.Direction,
+			Protocol:      call.Protocol,
+			Method:        call.Method,
+			Peer:          call.Peer,
+			Host:          call.Host,
+			Path:          call.Path,
+			StatusCode:    int32(call.StatusCode),
+			DurationMs:    call.DurationMS,
+			BytesIn:       call.BytesIn,
+			BytesOut:      call.BytesOut,
+			Error:         call.Error,
+			Timestamp:     timestamppb.New(call.Timestamp),
+		})
+	}
+	for _, rollup := range s.LogRollups {
+		out.LogRollups = append(out.LogRollups, &pb.LogRollup{
+			ContainerName: rollup.ContainerName,
+			Stream:        rollup.Stream,
+			Level:         rollup.Level,
+			Fingerprint:   rollup.Fingerprint,
+			Count:         rollup.Count,
+			SampleMessage: rollup.SampleMessage,
+			FirstSeen:     timestamppb.New(rollup.FirstSeen),
+			LastSeen:      timestamppb.New(rollup.LastSeen),
+		})
+	}
+	return out
+}
+
+func labelsToProto(labels map[string]string) []*pb.Label {
+	if len(labels) == 0 {
+		return nil
+	}
+	out := make([]*pb.Label, 0, len(labels))
+	for k, v := range labels {
+		out = append(out, &pb.Label{Key: k, Value: v})
 	}
 	return out
 }

@@ -31,6 +31,52 @@ message LogLine {
   string stream = 2;
   string message = 3;
   google.protobuf.Timestamp timestamp = 4;
+  string severity = 5;
+  string trace_id = 6;
+  string span_id = 7;
+  repeated Label labels = 8;
+}
+
+message Label {
+  string key = 1;
+  string value = 2;
+}
+
+message AppMetric {
+  string container_name = 1;
+  string namespace = 2;
+  string name = 3;
+  double value = 4;
+  string unit = 5;
+  repeated Label labels = 6;
+  google.protobuf.Timestamp timestamp = 7;
+}
+
+message NetworkCall {
+  string container_name = 1;
+  string direction = 2;
+  string protocol = 3;
+  string method = 4;
+  string peer = 5;
+  string host = 6;
+  string path = 7;
+  int32 status_code = 8;
+  double duration_ms = 9;
+  uint64 bytes_in = 10;
+  uint64 bytes_out = 11;
+  string error = 12;
+  google.protobuf.Timestamp timestamp = 13;
+}
+
+message LogRollup {
+  string container_name = 1;
+  string stream = 2;
+  string level = 3;
+  string fingerprint = 4;
+  uint64 count = 5;
+  string sample_message = 6;
+  google.protobuf.Timestamp first_seen = 7;
+  google.protobuf.Timestamp last_seen = 8;
 }
 
 message Batch {
@@ -42,6 +88,9 @@ message Batch {
   repeated ContainerSample samples = 6;
   repeated LogLine logs = 7;
   google.protobuf.Timestamp sent_at = 8;
+  repeated AppMetric app_metrics = 9;
+  repeated NetworkCall network = 10;
+  repeated LogRollup log_rollups = 11;
 }
 
 message PushAck {
@@ -60,4 +109,3 @@ service Ingest {
   rpc PushBatch(Batch) returns (PushAck);
   rpc StreamBatches(stream Batch) returns (StreamSummary);
 }
-

@@ -16,6 +16,7 @@ import (
 	"github.com/argus/ecs-fargate-agent/internal/health"
 	"github.com/argus/ecs-fargate-agent/internal/identity"
 	"github.com/argus/ecs-fargate-agent/internal/metadata"
+	"github.com/argus/ecs-fargate-agent/internal/otlp"
 	"github.com/argus/ecs-fargate-agent/internal/telemetry"
 )
 
@@ -50,6 +51,13 @@ func main() {
 	batcher := telemetry.NewBatcher(cfg, agentID, task)
 	coll := collector.New(metaClient, task, cfg, logger)
 	shipper := grpcclient.New(cfg, logger)
+	var localOTLP *otlp.Receiver
+	if cfg.OTLPEnabled {
+		localOTLP = otlp.NewReceiver(cfg.OTLPGRPCAddr, telemetryServiceName(task, cfg.ServiceName), logger)
+		if err := localOTLP.Start(ctx); err != nil {
+			logger.Warn("probe local otlp receiver unavailable", "addr", cfg.OTLPGRPCAddr, "error", err)
+		}
+	}
 
 	healthServer := health.NewServer(cfg.HealthAddress(), logger)
 	go func() {
@@ -58,7 +66,7 @@ func main() {
 		}
 	}()
 
-	if err := run(ctx, cfg, coll, batcher, shipper, logger); err != nil && !errors.Is(err, context.Canceled) {
+	if err := run(ctx, cfg, coll, batcher, shipper, localOTLP, logger); err != nil && !errors.Is(err, context.Canceled) {
 		logger.Error("agent stopped with error", "error", err)
 		os.Exit(1)
 	}
@@ -75,6 +83,7 @@ func run(
 	coll *collector.Collector,
 	batcher *telemetry.Batcher,
 	shipper *grpcclient.Client,
+	localOTLP *otlp.Receiver,
 	logger *slog.Logger,
 ) error {
 	logger.Info("probe ecs fargate agent started",
@@ -92,12 +101,25 @@ func run(
 			logger.Warn("collection failed", "error", err)
 			return
 		}
+		if localOTLP != nil {
+			appMetrics, network, logs, rollups := localOTLP.Drain()
+			snapshot.AppMetrics = append(snapshot.AppMetrics, appMetrics...)
+			snapshot.Network = append(snapshot.Network, network...)
+			snapshot.Logs = append(snapshot.Logs, logs...)
+			snapshot.LogRollups = append(snapshot.LogRollups, rollups...)
+		}
 		batch := batcher.FromSnapshot(snapshot)
 		if err := shipper.Send(ctx, batch); err != nil {
 			logger.Warn("telemetry send failed", "error", err)
 			return
 		}
-		logger.Debug("telemetry batch sent", "samples", len(batch.GetSamples()), "logs", len(batch.GetLogs()))
+		logger.Debug("telemetry batch sent",
+			"samples", len(batch.GetSamples()),
+			"logs", len(batch.GetLogs()),
+			"app_metrics", len(batch.GetAppMetrics()),
+			"network", len(batch.GetNetwork()),
+			"log_rollups", len(batch.GetLogRollups()),
+		)
 	}
 
 	send()
@@ -109,4 +131,14 @@ func run(
 			send()
 		}
 	}
+}
+
+func telemetryServiceName(task metadata.Task, fallback string) string {
+	if fallback != "" && fallback != "unknown-service" {
+		return fallback
+	}
+	if task.Family != "" {
+		return task.Family
+	}
+	return fallback
 }
